@@ -5,6 +5,7 @@
  - storage bucket for car photo storage
  - runs on wasm
  - deployed on gh-pages
+ - dynamic routes for the individual entities
 
 
 ## why is the code not DRY
