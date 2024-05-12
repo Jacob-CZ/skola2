@@ -37,7 +37,8 @@
     // Metoda pro přidání zákazníka
     public async void addCustomer()
     {
-        await supabaseGlobal.From<Customer>().Insert(newCustomer); // Vložení nového zákazníka do databáze
-        NavManager.NavigateTo(newCustomer.Id.ToString()); // Přesměrování na stránku se zákazníky po úspěšném přidání
+        var customer = await supabaseGlobal.From<Customer>().Insert(newCustomer); // Vložení nového zákazníka do databáze
+        newCustomer = new(); // Vytvoření nové instance nového zákazníka pro formulář
+        NavManager.NavigateTo(customer.Model.ToString()); // Přesměrování na stránku se zákazníky po úspěšném přidání
     }
 }

@@ -31,8 +31,9 @@
     // Metoda pro přidání auta
     private async void addCar()
     {
-        await supabaseGlobal.From<Car>().Insert(newCar); // Vložení nového auta do databáze
-        NavManager.NavigateTo(newCar.Id.ToString()); // Přesměrování na stránku s auty
+        var car = await supabaseGlobal.From<Car>().Insert(newCar); // Vložení nového auta do databáze
+        newCar = new(); // Vytvoření nové instance nového auta
+        NavManager.NavigateTo(car.Model.Id.ToString()); // Přesměrování na stránku s auty
     }
 
     private Car newCar = new(); // Nové auto test ff
