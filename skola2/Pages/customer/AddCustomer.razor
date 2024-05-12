@@ -39,6 +39,6 @@
     {
         var customer = await supabaseGlobal.From<Customer>().Insert(newCustomer); // Vložení nového zákazníka do databáze
         newCustomer = new(); // Vytvoření nové instance nového zákazníka pro formulář
-        NavManager.NavigateTo(customer.Model.ToString()); // Přesměrování na stránku se zákazníky po úspěšném přidání
+        NavManager.NavigateTo("customers/" + customer.Model.ToString()); // Přesměrování na stránku se zákazníky po úspěšném přidání
     }
 }

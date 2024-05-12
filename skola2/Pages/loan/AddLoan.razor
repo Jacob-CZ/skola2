@@ -79,6 +79,6 @@
         await auto.Update<Car>(); // Aktualizace dat o autě v databázi
         var loan = await supabaseGlobal.From<Loan>().Insert(newLoan); // Vložení nové půjčky do databáze
         newLoan = new(); // Vytvoření nové instance půjčky pro formulář
-        NavManager.NavigateTo(loan.Model.Id.ToString()); // Přesměrování na stránku s půjčkami
+        NavManager.NavigateTo("loans/" + loan.Model.Id.ToString()); // Přesměrování na stránku s půjčkami
     }
 }

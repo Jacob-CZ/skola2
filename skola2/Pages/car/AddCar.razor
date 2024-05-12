@@ -33,7 +33,7 @@
     {
         var car = await supabaseGlobal.From<Car>().Insert(newCar); // Vložení nového auta do databáze
         newCar = new(); // Vytvoření nové instance nového auta
-        NavManager.NavigateTo(car.Model.Id.ToString()); // Přesměrování na stránku s auty
+        NavManager.NavigateTo("cars/" + car.Model.Id.ToString()); // Přesměrování na stránku s auty
     }
 
     private Car newCar = new(); // Nové auto test ff
