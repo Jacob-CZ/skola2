@@ -1,0 +1,84 @@
+﻿@page "/loans/add"
+
+@using Supabase.Postgrest.Models 
+@inject NavigationManager NavManager 
+
+<h3>Přidat půjčku</h3>
+
+<div class="add">
+    <!-- Formulář pro přidání nové půjčky -->
+    <label for="car">Auto:</label>
+    <select @bind="newLoan.Car">
+        <option disabled selected>Vyberte auto</option>
+        @foreach (var car in cars)
+        {
+            <option value="@car.Id">@car.Make @car.Model</option>
+        }
+    </select>
+    <label for="customer">Zákazník:</label>
+    <select @bind="newLoan.Customer">
+        <option disabled selected>Vyberte zákazníka</option>
+        @foreach (var customer in customers)
+        {
+            <option value="@customer.Id">@customer.Name @customer.Surname</option>
+        }
+    </select>
+    <label for="loanDate">Datum půjčení:</label>
+    <InputDate @bind-Value="newLoan.LoanDate" />
+    <label for="returnDate">Datum vrácení:</label>
+    <InputDate @bind-Value="newLoan.ReturnDate" />
+    <button class="btn btn-primary" @onclick="addLoan">Přidat</button>
+</div>
+
+@code {
+    [CascadingParameter]
+    public Supabase.Client supabaseGlobal { get; set; } // Globální proměnná pro Supabase.Client
+
+    private Loan newLoan = new(); // Nová půjčka pro formulář
+
+    private List<Car> cars = new(); // Seznam aut
+
+    private List<Customer> customers = new(); // Seznam zákazníků
+
+    // Metoda volaná při inicializaci komponenty
+    protected override async Task OnInitializedAsync()
+    {
+        await getCars(); // Získání seznamu aut
+        await getCustomers(); // Získání seznamu zákazníků
+                              // Nastavení výchozích dat pro datum půjčení a vrácení (dnešní datum a zítra)
+        newLoan.LoanDate = DateOnly.Parse(DateTime.Today.ToLongDateString());
+        newLoan.ReturnDate = DateOnly.Parse(DateTime.Today.AddDays(1).ToLongDateString());
+        // Nastavení výchozího auta a zákazníka (první v seznamu)
+        newLoan.Car = cars.First().Id;
+        newLoan.Customer = customers.First().Id;
+    }
+
+    // Metoda pro získání seznamu zákazníků
+    public async Task getCustomers()
+    {
+        var data = await supabaseGlobal.From<Customer>().Get(); // Získání dat o zákaznících
+        customers = data.Models; // Nastavení seznamu zákazníků
+        StateHasChanged(); // Aktualizace komponenty
+    }
+
+    // Metoda pro získání seznamu aut
+    private async Task getCars()
+    {
+        var data = await supabaseGlobal.From<Car>().Get(); // Získání dat o autech
+                                                           // Filtr aut podle dostupnosti
+        cars = data.Models.Where(car => car.Available).ToList();
+        StateHasChanged(); // Aktualizace komponenty
+    }
+
+    // Metoda pro přidání nové půjčky
+    private async void addLoan()
+    {
+        Console.WriteLine(newLoan.Car + " " + newLoan.Customer); // Výpis dat o půjčce do konzole (pro kontrolu)
+        Car auto = cars.Where(car => car.Id == newLoan.Car).First(); // Získání auta podle ID
+        auto.Available = false; // Nastavení auta jako nedostupného
+        await auto.Update<Car>(); // Aktualizace dat o autě v databázi
+        await supabaseGlobal.From<Loan>().Insert(newLoan); // Vložení nové půjčky do databáze
+        newLoan = new(); // Vytvoření nové instance půjčky pro formulář
+        NavManager.NavigateTo("/loans"); // Přesměrování na stránku s půjčkami
+    }
+}

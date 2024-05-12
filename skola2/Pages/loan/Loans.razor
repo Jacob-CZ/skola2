@@ -1,0 +1,81 @@
+﻿@page "/loans" 
+
+@using Supabase.Postgrest.Models 
+
+<div>
+    <h3>Půjčky</h3>
+    <!-- Tabulka pro zobrazení seznamu půjček -->
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>car</th>
+                <th>customer</th>
+                <th>loan date</th>
+                <th>return date</th>
+                <th>save</th>
+                <th>delete</th>
+                <th>return</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Procházení seznamu půjček -->
+            @foreach (Loan loan in loans)
+            {
+                <tr>
+                    <!-- Zobrazení detailů každé půjčky v tabulce -->
+                    <td><a href=@("loans/" + loan.Id)>@loan.Id</a></td>
+                    <td><a href=@("cars/" + loan.Car)> @loan.Car </a></td>
+                    <td><a href=@("customers/" + loan.Customer)> @loan.Customer </a></td>
+                    <td><InputDate @bind-Value="loan.LoanDate" /></td>
+                    <td><InputDate @bind-Value="loan.ReturnDate" /></td>
+                    <td><button class="btn btn-primary" onclick=@(() => loan.Update<Loan>())>Uložit</button></td>
+                    <td><button class="btn btn-danger" onclick=@(() => handleDelete(loan))>Smazat</button></td>
+                    <td><button class="btn btn-primary" onclick=@(() => returnLoan(loan))>Vrátit</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <a href="/loans/add">Přidat novou půjčku</a> <!-- Odkaz na přidání nové půjčky -->
+</div>
+
+@code {
+    [CascadingParameter]
+    public Supabase.Client supabaseGlobal { get; set; } // Globální proměnná pro Supabase.Client
+
+    public List<Loan> loans = new(); // Seznam půjček
+
+    // Metoda volaná při inicializaci komponenty
+    protected override async Task OnInitializedAsync()
+    {
+        getLoans(); // Získání seznamu půjček
+    }
+
+    // Metoda pro získání seznamu půjček
+    private async void getLoans()
+    {
+        var data = await supabaseGlobal.From<Loan>().Get(); // Získání dat o půjčkách
+        loans = data.Models; // Nastavení seznamu půjček
+        StateHasChanged(); // Aktualizace komponenty
+    }
+
+    // Metoda pro smazání půjčky
+    private async void handleDelete(Loan loan)
+    {
+        await loan.Delete<Loan>(); // Smazání půjčky
+        getLoans(); // Aktualizace seznamu půjček
+        StateHasChanged(); // Aktualizace komponenty
+    }
+
+    private async Task returnLoan(Loan loan)
+    {
+        var cars = await supabaseGlobal.From<Car>().Get();
+        var car = cars.Models.FirstOrDefault(c => c.Id == loan.Car);
+        car.Available = true;
+        await car.Update<Car>();
+        loan.ReturnDate = DateOnly.Parse(DateTime.Today.ToLongDateString());
+        await loan.Update<Loan>();
+        getLoans();
+        StateHasChanged();
+    }
+}

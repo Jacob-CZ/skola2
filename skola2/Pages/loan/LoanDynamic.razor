@@ -1,0 +1,34 @@
+﻿@page "/loans/{Id}"
+@using Supabase.Postgrest.Models
+
+<h3>Loan @Id</h3>
+<a href=@("/cars/" + loan.Car)>Car: @loan.Car</a>
+<br />
+<br />
+<a href=@("/customers/" + loan.Customer)>Customer: @loan.Customer</a>
+<br />
+<br />
+<p>LoanDate: @loan.LoanDate</p>
+<p>ReturnDate: @loan.ReturnDate</p>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    [CascadingParameter]
+    public Supabase.Client supabaseGlobal { get; set; }
+
+    private Loan loan = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        GetLoan();
+    }
+
+    private async void GetLoan()
+    {
+        var data = await supabaseGlobal.From<Loan>().Get();
+        loan = data.Models.FirstOrDefault(c => c.Id == long.Parse(Id));
+        StateHasChanged();
+    }
+}

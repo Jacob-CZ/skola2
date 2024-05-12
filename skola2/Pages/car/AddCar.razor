@@ -1,0 +1,40 @@
+﻿@page "/cars/add"
+@using Supabase.Postgrest.Models
+@inject NavigationManager NavManager 
+
+<div class="add">
+    <h3>Přidat nové auto</h3>
+    <p>vin</p>
+    <input @bind="newCar.Vin" type="number" placeholder="VIN" />
+    <p>plate</p>
+    <input @bind="newCar.Plate" placeholder="Plate" />
+    <p>make</p>
+    <input @bind="newCar.Make" placeholder="Make" />
+    <p>model</p>
+    <input @bind="newCar.Model" placeholder="Model" />
+    <p>year</p>
+    <InputDate @bind-Value="newCar.Year" />
+    <p>price per day</p>
+    <input @bind="newCar.Price" type="number" placeholder="Price" />
+    <p>no of seats</p>
+    <input @bind="newCar.NumberOfSeats" type="number" placeholder="Number of seats" />
+    <p>odometer</p>
+    <input @bind="newCar.Odometer" type="number" placeholder="Odometer" />
+    <button class="btn btn-primary" @onclick="addCar">Přidat</button>
+</div>
+
+
+@code {
+    [CascadingParameter]
+    public Supabase.Client supabaseGlobal { get; set; } // Globální proměnná pro Supabase.Client
+
+    // Metoda pro přidání auta
+    private async void addCar()
+    {
+        await supabaseGlobal.From<Car>().Insert(newCar); // Vložení nového auta do databáze
+        newCar = new(); // Vytvoření nové instance nového auta
+        NavManager.NavigateTo("/cars"); // Přesměrování na stránku s auty
+    }
+
+    private Car newCar = new(); // Nové auto
+}

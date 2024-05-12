@@ -1,0 +1,44 @@
+﻿@page "/customers/add"
+
+@using Supabase.Postgrest.Models 
+@inject NavigationManager NavManager 
+
+<style>
+    /* Styly pro kontejner pro přidání zákazníka */
+    .add-customer-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin-top: 50px;
+    }
+</style>
+
+<div class="add-customer-container">
+    <h3>Přidat nového zákazníka</h3>
+    <!-- Formulář pro přidání zákazníka -->
+    <label for="name">Jméno:</label>
+    <input type="text" @bind="newCustomer.Name" placeholder="Jméno" />
+    <label for="surname">Příjmení:</label>
+    <input type="text" @bind="newCustomer.Surname" placeholder="Příjmení" />
+    <label for="birthDate">Datum narození:</label>
+    <InputDate @bind-Value="newCustomer.BirthDate" />
+    <label for="phone">Telefon:</label>
+    <input type="number" @bind="newCustomer.Phone" placeholder="Telefon" />
+    <button class="btn btn-primary" @onclick="addCustomer">Přidat</button>
+</div>
+
+@code {
+    [CascadingParameter]
+    public Supabase.Client supabaseGlobal { get; set; } // Globální proměnná pro Supabase.Client
+
+    public Customer newCustomer = new(); // Nový zákazník pro formulář
+
+    // Metoda pro přidání zákazníka
+    public async void addCustomer()
+    {
+        await supabaseGlobal.From<Customer>().Insert(newCustomer); // Vložení nového zákazníka do databáze
+        newCustomer = new(); // Vytvoření nové instance nového zákazníka pro formulář
+        NavManager.NavigateTo("/customers"); // Přesměrování na stránku se zákazníky po úspěšném přidání
+    }
+}

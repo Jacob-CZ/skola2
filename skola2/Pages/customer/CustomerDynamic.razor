@@ -1,0 +1,110 @@
+﻿@page "/customers/{id}" 
+
+@using Supabase.Postgrest.Models 
+
+<div class="customer-dynamic-list">
+    <h3>Zákazník</h3>
+    <!-- Formulář pro zobrazení a úpravu detailů zákazníka -->
+    <label for="name">Jméno:</label>
+    <input @bind-value="_customer.Name" />
+    <label for="surname">Příjmení:</label>
+    <input @bind-value="_customer.Surname" />
+    <label for="birthDate">Datum narození:</label>
+    <InputDate @bind-Value="_customer.BirthDate" />
+    <label for="phone">Telefon:</label>
+    <input @bind-value="_customer.Phone" type="number" />
+    <button class="btn btn-primary" onclick=@(() => _customer.Update<Customer>())>Uložit</button>
+</div>
+
+<h3>Loans</h3>
+<!-- Tabulka pro zobrazení půjček spojených se zákazníkem -->
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>id</th>
+            <th>car</th>
+            <th>customer</th>
+            <th>loan date</th>
+            <th>return date</th>
+            <th>save</th>
+            <th>delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Procházení seznamu půjček spojených se zákazníkem -->
+        @foreach (Loan loan in loans)
+        {
+            <tr>
+                <!-- Zobrazení detailů každé půjčky -->
+                <td><a href=@("loans/" + loan.Id)>@loan.Id</a></td>
+                <td><a href=@("cars/" + loan.Car)> @loan.Car </a></td>
+                <td><a href=@("customers/" + loan.Customer)> @loan.Customer </a></td>
+                <td><InputDate @bind-Value="loan.LoanDate" /></td>
+                <td><InputDate @bind-Value="loan.ReturnDate" /></td>
+                <td><button class="btn btn-primary" onclick=@(() => loan.Update<Loan>())>Uložit</button></td>
+                <td><button class="btn btn-danger" onclick=@(() => handleDelete(loan))>Smazat</button></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<style>
+    .customer-dynamic-list {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
+@code {
+    [CascadingParameter]
+    public Supabase.Client supabaseGlobal { get; set; } // Globální proměnná pro Supabase.Client
+    [Parameter]
+    public string Id { get; set; } // Parametr pro ID zákazníka
+
+    private Customer _customer = new Customer(); // Instance třídy Customer pro zobrazení a úpravu detailů zákazníka
+
+    private List<Loan> loans = new(); // Seznam půjček spojených se zákazníkem
+
+    // Metoda pro získání seznamu půjček
+    private async Task GetLoans()
+    {
+        var res = await supabaseGlobal.From<Loan>().Get(); // Získání dat o půjčkách
+        loans = res.Models.Where(loan => loan.Customer == long.Parse(Id)).ToList(); // Filtr půjček podle zákazníka
+        StateHasChanged(); // Aktualizace komponenty
+    }
+
+    // Metoda pro smazání půjčky
+    private async void handleDelete(Loan loan)
+    {
+        await loan.Delete<Loan>(); // Smazání půjčky
+        GetLoans(); // Aktualizace seznamu půjček
+        StateHasChanged(); // Aktualizace komponenty
+    }
+
+    // Metoda volaná při inicializaci komponenty
+    protected override async Task OnInitializedAsync()
+    {
+        getCustomer(); // Získání informací o zákazníkovi
+        GetLoans(); // Získání seznamu půjček
+    }
+
+    // Metoda pro zobrazení vybrané hodnoty (nepoužito)
+    private async void logSelected(ChangeEventArgs e)
+    {
+        Console.WriteLine(e.Value);
+    }
+
+    // Metoda pro získání informací o zákazníkovi
+    private async void getCustomer()
+    {
+        var data = await supabaseGlobal.From<Customer>().Get(); // Získání dat o zákaznících
+        var customer = data.Models.FirstOrDefault(c => c.Id == long.Parse(Id)); // Vyhledání zákazníka podle ID
+        if (customer != null)
+        {
+            _customer = customer; // Nastavení zobrazeného zákazníka
+        }
+        StateHasChanged(); // Aktualizace komponenty
+    }
+}

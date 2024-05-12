@@ -1,0 +1,154 @@
+﻿@page "/cars/{id}"
+
+@using Supabase.Postgrest.Models 
+
+<style>
+    /* Styly pro obrázkový kontejner a hlavní část */
+    .image-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+        flex-direction: column;
+    }
+
+    .carDynamic-main {
+        display: flex;
+        justify-content: space-between;
+        
+    }
+</style>
+
+<div class="carDynamic-main">
+    <div>
+        <h3>Car</h3>
+        <!-- Zobrazení detailů auta -->
+        <p>Id: @Id</p>
+        <p>Vin: @carr.Vin</p>
+        <p>Plate: @carr.Plate</p>
+        <p>Make: @carr.Make</p>
+        <p>Model: @carr.Model</p>
+        <p>Year: @carr.Year</p>
+        <p>Price: @carr.Price</p>
+        <p>Available: @carr.Available</p>
+        <p>Odometer: @carr.Odometer</p>
+        <p>Number of seats: @carr.NumberOfSeats</p>
+    </div>
+    <!-- Obrázkový kontejner -->
+    <div class=" image-container">
+        <InputFile OnChange="HandleFileInput" accept=".webp" />
+        <img src=@("https://mobtzmkfspmdhsjmgzus.supabase.co/storage/v1/object/public/images/" + Id + ".webp?" + Random) alt="Selected Image" />
+    </div>
+</div>
+
+<div>
+    <h3>Loans</h3>
+    <!-- Tabulka pro zobrazení půjček -->
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>car</th>
+                <th>customer</th>
+                <th>loan date</th>
+                <th>return date</th>
+                <th>save</th>
+                <th>delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Procházení seznamu půjček -->
+            @foreach (Loan loan in loans)
+            {
+                <tr>
+                    <!-- Zobrazení detailů každé půjčky -->
+                    <td><a href=@("loans/" + loan.Id)>@loan.Id</a></td>
+                    <td><a href=@("cars/" + loan.Car)> @loan.Car </a></td>
+                    <td><a href=@("customers/" + loan.Customer)> @loan.Customer </a></td>
+                    <td><InputDate @bind-Value="loan.LoanDate" /></td>
+                    <td><InputDate @bind-Value="loan.ReturnDate" /></td>
+                    <td><button class="btn btn-primary" onclick=@(() => loan.Update<Loan>())>Save</button></td>
+                    <td><button class="btn btn-danger" onclick=@(() => handleDelete(loan))>delete</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [CascadingParameter]
+    public Supabase.Client supabaseGlobal { get; set; } // Globální proměnná pro Supabase.Client
+
+    [Parameter]
+    public string Id { get; set; } // Parametr pro ID auta
+
+    private string Random { get; set; } // Náhodný řetězec pro aktualizaci obrázku
+
+    private List<Loan> loans = new(); // Seznam půjček
+
+    // Metoda volaná při inicializaci komponenty
+    protected override async Task OnInitializedAsync()
+    {
+        getCar(); // Získání informací o autě
+        GetImage(); // Získání obrázku
+        GetLoans(); // Získání seznamu půjček
+        Random = Guid.NewGuid().ToString(); // Generování náhodného řetězce
+    }
+
+    Car carr = new Car(); // Instance třídy Car pro zobrazení informací o autě
+
+    // Metoda pro získání informací o autě
+    private async void getCar()
+    {
+        var data = await supabaseGlobal.From<Car>().Get(); // Získání dat o autech
+        var car = data.Models.FirstOrDefault(c => c.Id == long.Parse(Id)); // Vyhledání auta podle ID
+        if (car != null)
+        {
+            carr = car; // Nastavení zobrazeného auta
+        }
+        StateHasChanged(); // Aktualizace komponenty
+    }
+
+    // Metoda pro získání obrázku auta
+    private async Task GetImage()
+    {
+        var response = await supabaseGlobal.Storage.From("images").List(); // Získání seznamu obrázků
+        Console.WriteLine(response[1].MetaData.ToList()[2]); // Výpis metadat obrázku (nepoužito)
+    }
+
+    // Metoda volaná při změně souboru pro obrázek
+    private async Task HandleFileInput(InputFileChangeEventArgs e)
+    {
+        var file = e.GetMultipleFiles().FirstOrDefault(); // Získání nahraného souboru
+        if (file != null)
+        {
+            var buffer = new byte[file.Size]; // Inicializace bufferu
+            await file.OpenReadStream().ReadAsync(buffer); // Čtení souboru do bufferu
+            var base64 = Convert.ToBase64String(buffer); // Převod na base64
+            byte[] image = Convert.FromBase64String(base64); // Převod z base64 na byte[]
+            var options = new Supabase.Storage.FileOptions
+                {
+                    Upsert = true, // Nastavení možnosti upsertu
+                };
+            await supabaseGlobal.Storage.From("images").Update(image, Id + ".webp", options); // Aktualizace obrázku
+        }
+        Random = Guid.NewGuid().ToString(); // Generování nového náhodného řetězce
+        StateHasChanged(); // Aktualizace komponenty
+    }
+
+    // Metoda pro získání seznamu půjček
+    private async Task GetLoans()
+    {
+        var res = await supabaseGlobal.From<Loan>().Get(); // Získání dat o půjčkách
+        loans = res.Models.Where(loan => loan.Car == long.Parse(Id)).ToList(); // Filtr půjček podle auta
+        StateHasChanged(); // Aktualizace komponenty
+    }
+
+    // Metoda pro smazání půjčky
+    private async void handleDelete(Loan loan)
+    {
+        await loan.Delete<Loan>(); // Smazání půjčky
+        GetLoans(); // Aktualizace seznamu půjček
+        StateHasChanged(); // Aktualizace komponenty
+    }
+}

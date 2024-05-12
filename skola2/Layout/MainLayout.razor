@@ -1,0 +1,52 @@
+﻿@inherits LayoutComponentBase
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        </div>
+
+        <article class="content px-4">
+            <CascadingValue Value="@supabaseGlobal">
+                @Body
+            </CascadingValue>
+        </article>
+    </main>
+    <style>
+        input{
+            width: 100%;
+            max-width: 200px;
+            background-color: transparent;
+            border: none;
+        }
+
+        .add input{
+            background-color: #f8f9fa;
+border: 1px solid #ced4da;
+border-radius: .25rem;
+
+        }
+        .add p{
+            margin: 0;
+        }
+    </style>
+</div>
+
+
+@code{
+    static string url = "https://mobtzmkfspmdhsjmgzus.supabase.co";
+    static string key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vYnR6bWtmc3BtZGhzam1nenVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTQwMzg3OTUsImV4cCI6MjAyOTYxNDc5NX0.n5E7w3znUMpisOf6MaAFU3urNnjYSTm9vyV4NZehO44";
+    static Supabase.SupabaseOptions options = new Supabase.SupabaseOptions
+        {
+            AutoConnectRealtime = true
+        };
+
+    public Supabase.Client supabaseGlobal = new Supabase.Client(url, key, options);
+    protected override async Task OnInitializedAsync()
+    {
+        await supabaseGlobal.InitializeAsync();
+    }
+}

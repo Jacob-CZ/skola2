@@ -1,0 +1,67 @@
+﻿@page "/customers" 
+
+@using Supabase.Postgrest.Models 
+
+<h3>Zákazníci</h3>
+
+<div>
+    <!-- Tabulka pro zobrazení seznamu zákazníků -->
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>name</th>
+                <th>surname</th>
+                <th>birth date</th>
+                <th>phone</th>
+                <th>save</th>
+                <th>delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Procházení seznamu zákazníků -->
+            @foreach (Customer can in canvases)
+            {
+                <tr>
+                    <!-- Zobrazení detailů každého zákazníka v tabulce -->
+                    <td><a href=@("customers/" + can.Id)>@can.Id</a></td>
+                    <td><input @bind-value="can.Name" /></td>
+                    <td><input @bind-value="can.Surname" /></td>
+                    <td><InputDate @bind-Value="can.BirthDate" /></td>
+                    <td><input @bind-value="can.Phone" type="number" /></td>
+                    <td><button class="btn btn-primary" onclick=@(() => can.Update<Customer>())>Uložit</button></td>
+                    <td><button class="btn btn-danger" onclick=@(() => handleDelete(can))>Smazat</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <a href="/customers/add">Přidat nového zákazníka</a> <!-- Odkaz na přidání nového zákazníka -->
+</div>
+
+@code {
+    [CascadingParameter]
+    public Supabase.Client supabaseGlobal { get; set; } // Globální proměnná pro Supabase.Client
+
+    public List<Customer> canvases = new(); // Seznam zákazníků
+
+    // Metoda volaná při inicializaci komponenty
+    protected override async Task OnInitializedAsync()
+    {
+        getCanvas(); // Získání seznamu zákazníků
+    }
+
+    // Metoda pro získání seznamu zákazníků
+    public async void getCanvas()
+    {
+        var data = await supabaseGlobal.From<Customer>().Get(); // Získání dat o zákaznících
+        canvases = data.Models; // Nastavení seznamu zákazníků
+        StateHasChanged(); // Aktualizace komponenty
+    }
+
+    // Metoda pro smazání zákazníka
+    public async void handleDelete(Customer can)
+    {
+        await can.Delete<Customer>(); // Smazání zákazníka
+        getCanvas(); // Aktualizace seznamu zákazníků
+    }
+}

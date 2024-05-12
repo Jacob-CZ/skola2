@@ -1,0 +1,85 @@
+﻿@page "/cars" 
+
+@using Supabase.Postgrest.Models 
+
+<div>
+    <h1>Auta</h1>
+    <!-- Tabulka pro zobrazení seznamu aut -->
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <!-- Hlavičky tabulky -->
+                <th>id</th>
+                <th>vin</th>
+                <th>plate</th>
+                <th>make</th>
+                <th>model</th>
+                <th>year</th>
+                <th>price per day</th>
+                <th>avilable</th>
+                <th>odometer</th>
+                <th>no of seats</th>
+                <th>save</th>
+                <th>delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Procházení seznamu aut -->
+            @foreach (Car car in cars)
+            {
+                <tr>
+                    <!-- Zobrazení detailů každého auta -->
+                    <td><a href=@("cars/" + car.Id)>@car.Id</a></td>
+                    <td><input @bind-value="car.Vin" type="number" /></td>
+                    <td><input @bind-value="car.Plate" /></td>
+                    <td><input @bind-value="car.Make" /></td>
+                    <td><input @bind-value="car.Model" /></td>
+                    <td><InputDate @bind-Value="car.Year" /> </td>
+                    <td><input @bind-value="car.Price" type="number" /></td>
+                    <td><p onclick=@(() => changeAvailable(car))>@car.Available</p></td>
+                    <td><input @bind-value="car.Odometer" type="number" /></td>
+                    <td><input @bind-value="car.NumberOfSeats" type="number" /></td>
+                    <td><button class="btn btn-primary" onclick=@(() => car.Update<Car>())>Save</button></td>
+                    <td><button class="btn btn-danger" onclick=@(() => handleDelete(car))>delete</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <!-- Odkaz pro přidání nového auta -->
+    <a href="/cars/add">add new car</a>
+</div>
+
+@code {
+    [CascadingParameter]
+    public Supabase.Client supabaseGlobal { get; set; } // Globální proměnná pro Supabase.Client
+
+    private List<Car> cars = new(); // Seznam aut
+
+    // Metoda volaná při inicializaci komponenty
+    protected override async Task OnInitializedAsync()
+    {
+        getCars(); // Získání seznamu aut
+    }
+
+    // Metoda pro získání seznamu aut
+    private async void getCars()
+    {
+        var data = await supabaseGlobal.From<Car>().Get(); // Získání dat o autech
+        cars = data.Models; // Nastavení seznamu aut
+        StateHasChanged(); // Aktualizace komponenty
+    }
+
+    // Metoda pro smazání auta
+    private async void handleDelete(Car car)
+    {
+        await car.Delete<Car>(); // Smazání auta
+        getCars(); // Aktualizace seznamu aut
+    }
+
+    // Metoda pro změnu dostupnosti auta
+    private void changeAvailable(Car car)
+    {
+        car.Available = !car.Available; // Změna dostupnosti auta
+        StateHasChanged(); // Aktualizace komponenty
+    }
+}
