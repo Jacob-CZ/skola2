@@ -78,7 +78,6 @@
         auto.Available = false; // Nastavení auta jako nedostupného
         await auto.Update<Car>(); // Aktualizace dat o autě v databázi
         await supabaseGlobal.From<Loan>().Insert(newLoan); // Vložení nové půjčky do databáze
-        newLoan = new(); // Vytvoření nové instance půjčky pro formulář
-        NavManager.NavigateTo("/loans"); // Přesměrování na stránku s půjčkami
+        NavManager.NavigateTo(newLoan.Id.ToString()); // Přesměrování na stránku s půjčkami
     }
 }

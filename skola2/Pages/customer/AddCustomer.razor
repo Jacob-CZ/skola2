@@ -38,7 +38,6 @@
     public async void addCustomer()
     {
         await supabaseGlobal.From<Customer>().Insert(newCustomer); // Vložení nového zákazníka do databáze
-        newCustomer = new(); // Vytvoření nové instance nového zákazníka pro formulář
-        NavManager.NavigateTo("/customers"); // Přesměrování na stránku se zákazníky po úspěšném přidání
+        NavManager.NavigateTo(newCustomer.Id.ToString()); // Přesměrování na stránku se zákazníky po úspěšném přidání
     }
 }
