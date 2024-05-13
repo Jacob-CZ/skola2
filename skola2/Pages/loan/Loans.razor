@@ -13,6 +13,7 @@
                 <th>customer</th>
                 <th>loan date</th>
                 <th>return date</th>
+                <th>loan days</th>
                 <th>save</th>
                 <th>delete</th>
                 <th>return</th>
@@ -29,6 +30,7 @@
                     <td><a href=@("customers/" + loan.Customer)> @loan.Customer </a></td>
                     <td><InputDate @bind-Value="loan.LoanDate" /></td>
                     <td><InputDate @bind-Value="loan.ReturnDate" /></td>
+                    <td>@((loan.ReturnDate.ToDateTime(TimeOnly.MinValue) - loan.LoanDate.ToDateTime(TimeOnly.MinValue)).Days)</td>
                     <td><button class="btn btn-primary" onclick=@(() => loan.Update<Loan>())>Uložit</button></td>
                     <td><button class="btn btn-danger" onclick=@(() => handleDelete(loan))>Smazat</button></td>
                     <td><button class="btn btn-primary" onclick=@(() => returnLoan(loan))>Vrátit</button></td>
@@ -43,7 +45,9 @@
     [CascadingParameter]
     public Supabase.Client supabaseGlobal { get; set; } // Globální proměnná pro Supabase.Client
 
-    public List<Loan> loans = new(); // Seznam půjček
+    private List<Loan> loans = new(); // Seznam půjček
+
+    private Car auto = new Car();
 
     // Metoda volaná při inicializaci komponenty
     protected override async Task OnInitializedAsync()
@@ -57,6 +61,14 @@
         var data = await supabaseGlobal.From<Loan>().Get(); // Získání dat o půjčkách
         loans = data.Models; // Nastavení seznamu půjček
         StateHasChanged(); // Aktualizace komponenty
+    }
+
+    private async Task<Car> getCar(long id)
+    {
+        var data = await supabaseGlobal.From<Car>().Get(); // Získání dat o autech
+        auto = data.Models.FirstOrDefault(c => c.Id == id); // Nastavení seznamu aut
+        StateHasChanged(); // Aktualizace komponenty
+        return auto;
     }
 
     // Metoda pro smazání půjčky
