@@ -28,3 +28,7 @@
    - delete - deletes the row bound to the object from the db 
 - razr file methods
   - there are lot of utility methods to query and update the db and re render the site using state has changed (their functionalyty is described in the comment and their name)   
+
+
+# db schema
+![schema img](./image.png)
